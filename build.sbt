@@ -31,3 +31,39 @@ libraryDependencies ++= Seq(
   "org.apache.spark" % "spark-core_2.10" % "1.5.2" % "provided" excludeAll ExclusionRule(organization = "javax.servlet"),
   "com.6estates" % "apiclient-filecenter" % "0.1.6"
 )
+
+publishMavenStyle := true
+
+pomIncludeRepository := { x => false }
+
+assemblyJarName in assembly := "6spark-" + version.value + ".jar"
+test in assembly := {}
+
+assemblyMergeStrategy in assembly := {
+  //case PathList("org", "apache","http",xs @ _*)         => MergeStrategy.first
+  case PathList("META-INF", xs@_*) =>
+
+    (xs map {
+      _.toLowerCase
+    }) match {
+      //case ("manifest.mf" :: Nil) | ("index.list" :: Nil) | ("dependencies" :: Nil) => MergeStrategy.discard
+      case _ => MergeStrategy.discard
+    }
+  case _ => MergeStrategy.first
+}
+
+assemblyExcludedJars in assembly := {
+  val cp = (fullClasspath in assembly).value
+  cp filter {f=>{
+    f.data.getName == "httpclient-4.1.3.jar" ||
+      f.data.getName == "httpclient-4.3.jar" ||
+      f.data.getName == "httpclient-4.2.6.jar" ||
+      f.data.getName == "httpcore-4.2.5.jar" ||
+      f.data.getName == "httpcore-4.3.jar" ||
+      f.data.getName == "httpcore-4.2.4.jar" ||
+      f.data.getName == "httpcore-4.3.1.jar" ||
+      f.data.getName == "httpcore-4.4.5.jar" ||
+      f.data.getName == "httpcore-4.4.4.jar" ||
+      f.data.getName == "httpcore-4.4.1.jar"
+  }}
+}

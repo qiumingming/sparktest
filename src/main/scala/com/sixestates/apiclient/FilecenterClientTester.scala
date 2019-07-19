@@ -7,6 +7,8 @@ import com.sixestates.apiclient.filecenter.client.{FileCenterClient, FileCenterC
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 
+import scala.collection.mutable.ListBuffer
+
 
 
 object FilecenterClientTester {
@@ -38,22 +40,29 @@ object FilecenterClientTester {
     val wordRdd = rdd.filter(line => line!=null && !line.isEmpty)
       .flatMap(wordLine => {
         wordLine.split(" ")
-      })
+      }).filter(word =>{
+      word.endsWith("/n")
+    })
+    val wordCount = wordRdd.count()
+    println("********** find word count : "+wordCount)
 
-    val sortWordRdd = wordRdd.map(word => {
+    val sortWordRdd = wordRdd.map(wp => {
+      val word = wp.split("/").apply(0)
       (word, 1)
     }).reduceByKey((a, b) => a + b).sortBy(
       _._2, false
     ).take(100)
+    val topN = sortWordRdd.count(x => true)
+    println("********** find Top word count : "+ topN)
 
     sortWordRdd.foreach(wc =>{
-      println()
+      println(wc)
     })
 
   }
 
   def getFileRdd(fileId : Long): List[String] = {
-    val lines : List[String] = List()
+    var lines : ListBuffer[String] = new ListBuffer[String]
     val bufferedReader = this.fileCenterClient.bufferedReadFile(fileId)
     var order = 1
     var errorSize = 0
@@ -65,7 +74,7 @@ object FilecenterClientTester {
         println("Data[{"+order+"}] format error : {}"+line)
         errorSize = errorSize + 1
       }else{
-        lines.+(line)
+        lines += tokens
       }
       if (order % 10000 == 0) println("Now check data size "+order+"/"+lines.count(s => true)+", and find error data size : "+errorSize+"")
       line = bufferedReader.readLine
@@ -74,7 +83,8 @@ object FilecenterClientTester {
 
     bufferedReader.close();
     println("Totally check data size "+order+"/"+lines.count(s => true)+", and find error data size : "+errorSize)
-    return lines;
+    println("Totally get lines :"+lines.length)
+    return lines.toList;
   }
 
   def doCheck(line : String) : String = {

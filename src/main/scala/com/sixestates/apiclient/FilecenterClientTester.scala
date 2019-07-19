@@ -1,22 +1,15 @@
 package com.sixestates.apiclient
 
-import java.io.BufferedReader
-import java.util
-
 import com.alibaba.fastjson
 import com.alibaba.fastjson.JSON
 import com.lakeside.core.ArgOptions
-import com.sixestates.apiclient.filecenter.check.ThuKeywordFileDataChecker
 import com.sixestates.apiclient.filecenter.client.{FileCenterClient, FileCenterClientFactory}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
-import org.slf4j.{Logger, LoggerFactory}
 
-import scala.util.parsing.json.JSONObject
 
 
 object FilecenterClientTester {
-  protected val log : Logger = LoggerFactory.getLogger(FilecenterClientTester.getClass)
   protected val fileCenterClient: FileCenterClient = FileCenterClientFactory.getInstance("common", "ceph_gateway", "sg-west", "qiumingming@6estates.com")
 
   def main(args: Array[String]): Unit = {
@@ -69,18 +62,18 @@ object FilecenterClientTester {
     while (line != null && !line.isEmpty) {
       val tokens = doCheck(line)
       if (tokens == null) {
-        log.error("Data[{}] format error : {}", order, line)
+        println("Data[{"+order+"}] format error : {}"+line)
         errorSize = errorSize + 1
       }else{
         lines.+(line)
       }
-      if (order % 10000 == 0) log.info("Now check data size {}/{}, and find error data size : {}", order, lines.count(s => true), errorSize)
+      if (order % 10000 == 0) println("Now check data size "+order+"/"+lines.count(s => true)+", and find error data size : "+errorSize+"")
       line = bufferedReader.readLine
       order = order + 1
     }
 
     bufferedReader.close();
-    log.info("Totally check data size {}/{}, and find error data size : {}", order, lines.count(s => true), errorSize)
+    println("Totally check data size "+order+"/"+lines.count(s => true)+", and find error data size : "+errorSize)
     return lines;
   }
 
